@@ -53,3 +53,21 @@ class Game:
     def draw(self, window: Surface):
         self.draw_board(window)
         self.draw_pieces(window)
+
+    def move(self,row,col,piece):
+        self.board[piece.row][piece.col],self.board[row][col]= self.board[row][col],self.board[piece.row][piece.col]
+        piece.move(row,col)
+
+        if row==ROWS  or row == 0:
+            piece.make.queens()
+            if piece.color == WHITE:
+             self.white_queens += 1
+        else:
+            self.red_queens += 1
+
+    def get_piece(self,row,col):
+        return self.board[row][col]
+    
+
+
+            

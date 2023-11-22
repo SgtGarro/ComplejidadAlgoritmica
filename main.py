@@ -16,6 +16,9 @@ game = Game()
 def main():
     run = True
     clock = pygame.time.Clock()
+   
+
+    
 
     while run:
         clock.tick(FPS)
