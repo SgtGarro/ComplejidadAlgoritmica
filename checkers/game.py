@@ -1,73 +1,59 @@
 import pygame
-from pygame import Surface, Rect
+from pygame import Surface
+from .board import Board
 from .piece import Piece
-from .constants import *
+from .constants import RED, WHITE
 
-
-# [0, 1, 0, 1, 0, 1, 0, 1],
-# [1, 0, 1, 0, 1, 0, 1, 0],
-# [0, 1, 0, 1, 0, 1, 0, 1],
-# [0, 0, 0, 0, 0, 0, 0, 0],
-# [0, 0, 0, 0, 0, 0, 0, 0],
-# [2, 0, 2, 0, 2, 0, 2, 0],
-# [0, 2, 0, 2, 0, 2, 0, 2],
-# [2, 0, 2, 0, 2, 0, 2, 0],
 
 class Game:
-    def __init__(self) -> None:
-        self.board = []
-        self.current_piece = None
-        self.red_pieces = 12
-        self.white_pieces = 12
-        self.red_queens = 0
-        self.white_queens = 0
-        self.init_board()
+    def __init__(self, window: Surface, board: Board) -> None:
+        self.window = window
+        self.board = board
 
-    def init_board(self):
-        for row in range(ROWS):
-            self.board.append([])
-            for col in range(COLS):
-                if col % 2 == ((row + 1) % 2):
-                    if row < 3:
-                        self.board[row].append(Piece(row, col, WHITE))
-                    elif row > 4:
-                        self.board[row].append(Piece(row, col, RED))
-                    else:
-                        self.board[row].append(None)
-                else:
-                    self.board[row].append(None)
+        self.selected: Piece = None
+        self.valid_moves = {}
+        self.turn = RED
 
-    def draw_board(self, window: Surface):
-        window.fill(MARRON)
-        for row in range(ROWS):
-            for col in range(row % 2, ROWS, 2):
-                field = Rect(row * SQUARE_SIZE, col * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE)
-                pygame.draw.rect(window, CREMA, field)
-    def draw_pieces(self, window: Surface):
-        for row in range(ROWS):
-            for col in range(COLS):
-                piece: Piece | None = self.board[row][col]
-                if piece != None:
-                    piece.draw(window)
+    def update(self):
+        self.board.draw(self.valid_moves, self.window)
+        pygame.display.update()
 
-    def draw(self, window: Surface):
-        self.draw_board(window)
-        self.draw_pieces(window)
+    def reset(self):
+        self.board = Board()
+        self.selected: Piece = None
+        self.turn = RED
+        self.valid_moves = {}
 
-    def move(self,row,col,piece):
-        self.board[piece.row][piece.col],self.board[row][col]= self.board[row][col],self.board[piece.row][piece.col]
-        piece.move(row,col)
+    def select(self, row, col):
+        if self.selected:
+            result = self._move(row, col)
+            if not result:
+                self.selected = None
+                self.select(row, col)
 
-        if row==ROWS  or row == 0:
-            piece.make.queens()
-            if piece.color == WHITE:
-             self.white_queens += 1
+        piece = self.board.get_piece(row, col)
+        if piece != None and piece.color == self.turn:
+            self.selected = piece
+            self.valid_moves = self.board.get_valid_moves(piece)
+            return True
+
+        return False
+
+    def _move(self, row, col):
+        target = self.board.get_piece(row, col)
+        if self.selected and target == None and (row, col) in self.valid_moves:
+            self.board.move(row, col, self.selected)
+            skipped = self.valid_moves[(row, col)]
+            if skipped:
+                self.board.remove(skipped)
+            self.change_turn()
         else:
-            self.red_queens += 1
+            return False
 
-    def get_piece(self,row,col):
-        return self.board[row][col]
-    
+        return True
 
-
-            
+    def change_turn(self):
+        if self.turn == RED:
+            self.turn = WHITE
+        else:
+            self.turn = RED
