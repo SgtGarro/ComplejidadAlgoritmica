@@ -71,7 +71,7 @@ class Board:
     def remove(self, pieces):
         for piece in pieces:
             self.board[piece.row][piece.col] = None
-            if piece != 0:
+            if piece != None:
                 if piece.color == RED:
                     self.red_pieces -= 1
                 else:
